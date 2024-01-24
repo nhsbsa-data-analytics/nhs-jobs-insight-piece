@@ -1,0 +1,441 @@
+---
+title: "Data Professional Roles in the NHS: The NCF's Quest for Standardisation."
+author: Thomas Owen
+date: "`r Sys.Date()`"
+date-format: "D MMMM YYYY"
+editor: visual
+format:
+  html:
+    # Table of Contents options
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    toc-title: Contents
+    number-sections: false
+    number-depth: 3
+    # Render options
+    theme: cosmo
+    css: NHS_report_theme.css
+    anchor-sections: false
+    html-math-method: katex
+    # Code options
+    code-tools:
+      source: false
+      toggle: false
+      caption: none
+    # code-fold: false
+    # code-summary: "Show code"
+    embed-resources: true
+    standalone: true
+    # URL options
+    link-external-icon: true
+    link-external-newwindow: true
+    # Reference options
+    citations-hover: true
+    footnotes-hover: true
+    # Callout options
+    callout-appearance: simple
+    callout-collapse: true
+    # Caption options
+    cap-location: bottom
+    # Title options
+    title-block-banner: '#005EB8'
+    backgroundcolor: '#f0f4f5'
+    # Set font
+    mainfont: 'Arial'
+execute:
+  echo: false
+crossref:
+  fig-title: '**Figure**'
+  fig-labels: arabic
+
+embed-resources: true
+---
+
+```{r }
+#| echo: false
+#| warning: false
+#| include: false
+source(here::here('R/skills_analysis/preamble.R'))
+source(here::here('R/skills_analysis/load_packages.R'))
+source(here::here('R/skills_analysis/functions.R'))
+source(here::here('R/skills_analysis/data_loading.R'))
+
+
+
+
+
+```
+
+## Background and Aim
+
+When I applied for a position as a Data Scientist at the NHS Business Services Authority (NHSBSA), I, like most others who work for the NHS, applied through NHS Jobs. In fact, during the 2021-22 and 2022-23 financial years over **1.1M vacancies** were advertised through NHS Jobs alone. This creates a diverse and vast dataset about NHS vacancies.
+
+As a team of Data Scientists we jumped at the opportunity to analyse this dataset. And as early adopters of the [National Competency Framework](https://transform.england.nhs.uk/key-tools-and-info/nhsx-analytics-unit/data-and-analytics-partnership-gateway/competency-framework-development/) (NCF) for Data Professionals, which aims to professionalise and standardise data roles, this seemed like a great use case for analysis.
+
+We extracted the technical and analytical skills for all the Data Professional vacancies covered by the NCF and quantified how similar the identified skills were across NHS organisations. In this work we only focused on technical and analytical skills, although the NCF also covers ancillary skills too. This allowed us to:
+
+1.  Identify if the same technical and analytical skills occur within job descriptions regardless of organisation.
+
+2.  Gauge how different Data Professional vacancies are in terms of technical and analytical skills before the introduction of the NCF.
+
+3.  Develop a framework that could be used in future as one way of assessing the impact of the NCF on the alignment and standardisation of technical and analytical skills.
+
+## Our Approach
+
+**In this analysis we filter the 1.1M unique vacancies down to the 1.7K Data Scientist, Engineer and Analyst vacancies where job description text was available.**
+
+**Step 1 -- Identifying vacancies and technical skills.**
+
+Our first step is to filter the data from all NHS vacancies to the three roles the NCF covers. Unfortunately, the job title is a free text field and so some text needs cleaning before we can extract the desired vacancies. First, we remove non-alphanumeric characters and any unnecessary whitespace from the string. Then, using key word matching, we identify and remove NHS pay band information if included within the job title string. Finally, we convert the job title to uppercase and keep only those vacancies containing the following strings: **DATA SCIENTIST**, **DATA ANALYST** or **DATA ENGINEER**. For data analysts we also kept job titles that matched with **INFORMATION ANALYST** and **PERFORMANCE ANALYST**. Job titles containing the word **ADMINISTRATOR** within the title are excluded from this analysis. This approach returns roles at all seniority levels, returning vacancies at the junior, regular, and senior/lead level.
+
+**In total we identify 1751 Data Science, Engineer and Analyst vacancies advertised across the NHS during the 2021-23 financial years where we had data available.**
+
+To extract the technical and analytical skills we thought about identifying and using the person criteria within the job description. As NHS job description templates differ across organisations, we would have to create a custom script for all 285 organisations that advertised for a Data Professional vacancy. Instead, we use a key word matching approach using a dictionary of 103 technical and analytical skills, populated by the Data Science team (Table 1) based on the contents of the NCF and the collective experiences of the Data Science team. Acronyms and common derivatives of each skill were also searched for.
+
+If a technical or analytical skill from our dictionary matches anywhere within the job description text we consider it to be a required skill for that vacancy.
+
+**Step 2 -- Comparing technical and analytical skills sets across job titles.**
+
+There are lots of different ways to compare the common skill sets for every pair of jobs titles. In this work we use the **Jaccard similarity index**. The Jaccard index is the ratio of overlapping skills relative to the total number of skills between the two jobs. So, if two jobs have the same identified skills the Jaccard index would be one. If they are completely unique then the index would be zero. Skill sets that have partial overlap would give a Jaccard index somewhere between zero and one. By comparing every pair of vacancies we can store the results and create a similarity matrix.
+
+A matrix is a good mathematical object to store the similarities between jobs, but it is not the best way to look for patterns. Especially when there lots of job postings to compare. To compare 100 vacancies we would have to check 4,950 unique values! This is where multidimensional scaling (MDS) comes to the rescue. Using the matrix of similarities as input, MDS projects the data into two easy to visualise dimensions. What's more, MDS preserves, as best as it can, the differences and similarities between jobs, making it the ideal tool for this situation. As a bonus, we can use k-means clustering to group vacancies based on the technical skills identified in the job description text.
+
+<!-- start of chart tabset -->
+
+::: panel-tabset
+## Dictionary of Technical and Analytical Skills
+
+```{r }
+#| echo: false
+#| warning: false
+#| #| label: technical-skills-list
+#| fig-cap: " **Table of technical skills.** These are the 103 technical skills, dervied in-house by the Data Science team, that were used as matching criteria for job description text. If a match was found between the job description text and one of the dictionary skills then it is considered one of the technical skills for that particular vacancy."
+
+tab = xlsx::read.xlsx(here::here('./data/technical_skills.xlsx'), sheetIndex = 1) %>%
+  select(concatenated_skills) %>%
+  distinct(concatenated_skills) %>%
+  arrange(concatenated_skills) %>%
+  mutate(
+    concatenated_skills = str_trim(concatenated_skills),
+    concatenated_skills = case_when(
+      str_length(concatenated_skills) > 3 ~ str_to_title(concatenated_skills),
+      TRUE ~ str_to_upper(concatenated_skills)
+    )
+  ) %>%
+  rename('Technical Skills' = 'concatenated_skills')
+
+as.data.frame(matrix(c(tab$`Technical Skills`, rep(NA,100%%length(tab$`Technical Skills`))),
+       ncol=5,
+       nrow=21,
+       byrow = F))%>%DT::datatable(
+              extensions = 'Buttons',
+              rownames = FALSE,
+              callback=JS('$("button.buttons-copy").css("background","#005EB8");
+                    $("button.buttons-copy").css("color","white");
+                    $("button.buttons-print").css("background","#005EB8");
+                    $("button.buttons-print").css("color","white");
+                    $("button.buttons-excel").css("background","#005EB8");
+                    $("button.buttons-excel").css("color","white");
+                    $("button.buttons-pdf").css("background","#005EB8");
+                    $("button.buttons-pdf").css("color","white");
+                    return table;'),
+              colnames = c('','','','',''),
+              options = list(dom = 'rtpB',scrollY = "350px",scrollCollapse=T, pageLength = 21, autoWidth = TRUE,                             
+              buttons =list(list(
+                                 extend = 'copy',
+                                 title = "",
+                                 text = 'Copy') ,
+                            list(
+                                   extend = 'print',
+                                   title = "",
+                                   text = 'Print'
+                                   ) ,
+                            list(
+                                     extend = 'excel',
+                                     filename = paste0('technical_skills'), 
+                                     title = "",
+                                     text = 'CSV'
+                                   ),
+                            list(
+                                     extend = 'pdf',
+                                     filename = paste0('technical_skills'), 
+                                     title = "",
+                                     text = 'PDF'
+                                   )
+                               )))%>%
+  DT::formatStyle(columns = colnames(.$x$data), `font-size` = "14px")
+```
+:::
+
+## Insights
+
+### Technical and analytical skills identified for the individual jobs covered by the NCF across NHS organisations.
+
+With all the data processed it is time to visualise the results. We will look at each Data Professional role individually to see if any differences exist across organisations.
+
+**Data Scientist (including Senior and Lead)**
+
+Forty-two NHS organisations advertised for 89 Data Scientist vacancies during the 2021-23 period where we had data, ranging from Band 4 to Band 8b. Comparing Data Scientist vacancies and their identified technical skills we can see that differences exist (Figure 2). Although advertising for the same Data Professional role, there are some differences in the number of skills identified. For some organisations fewer technical skills are identified (Group 3), but for others many skills are identified. The median number of technical skills identified is 10, with a minimum and maximum of 1 and 18 respectively.
+
+The three Data Scientist vacancies advertised by the NHSBSA are in Group 1. Group 1 contains vacancies from lots of other organisations with a large range of technical skills. Two outliers in Group 3 have a single technical skill identified. Both correspond to vacancies at London Ambulance Service Trust NHS.
+
+<!-- start of chart tabset -->
+
+::: panel-tabset
+<!-- make new tabs with ## -->
+
+## Comparison of Data Scientist vacancies across the NHS
+
+```{r}
+#| echo: false
+#| warning: false
+#| label: fig-skill-clustering-single-vacancy
+#| fig-cap: " **Comparison of the identified technical skills for Data Scientist vacancies across NHS organisations.** Points located closer together share more similar skill sets than those positioned far apart. Filter the data and explore the metadata further in the table on the next tab."
+VACANCY='DATA SCIENTIST'
+n_clust=4
+source(here::here('R/skills_analysis/single_job_title.R'))
+
+
+plot_data=create_plot_data(similarity_results_single_vac,single_vacancy_identified_skills,jitter=0.04)
+
+
+ct_data=crosstalk::SharedData$new(plot_data)
+
+
+
+title_filter=filter_select("qb", "Organisation", ct_data, ~Organisation)
+group_filter=filter_checkbox("type", "Group", ct_data, ~Group)
+jobtitle_filter=filter_select("qb", "Job Title", ct_data, ~`Job Title`)
+
+
+
+
+
+
+
+
+# add a div so that the various components get bound together
+div(
+  # use bootstrap columns for the crosstalk stuff
+  bscols(
+    # bootstrap is built off a 12 wide grid system,
+    # so we have 1/6 and 5/6 width below
+    widths = c(3, NA),
+    list(
+      # Create shiny-esque filters
+      # Note that we are defining:
+      # a name for the filter
+      # a display name for the filter
+      # a shared data object
+      # and a column of interest (w/ a ~)
+     title_filter,
+     jobtitle_filter,
+      group_filter
+     
+    ),
+   create_interactive_figure(ct_data,y_axis_range = c(-0.7,1),x_axis_range = c(-0.7,0.7))
+  )
+)  
+
+```
+
+## Table of Results
+
+```{r}
+#| label: fig2-table
+#| fig-cap: "**Table 1:** Similarity and grouping of Data Scientist vacancies across organisations based on the identified technical skills."
+
+create_tabulated_data(ct_data,'data_scientist')
+
+
+```
+:::
+
+**Data Engineer (including Lead, Senior and Principal)**
+
+One hundred and thirty six Data Engineer vacancies were advertised by 28 NHS organisations during 2021-23 where we have data, ranging from Band 3 to Band 8c. The number of technical skills identified range from 4-17 with a median of 8 skills per vacancy. Based on the identified technical skills we can again see differences between the vacancies. Interestingly all vacancies clustered into Group 4 belong to a single organisation: North of England Commissioning Support. Two subgroups split the vacancies further based on the level of seniority. One subgroup corresponds to the Agenda for Change (AfC) Band 6 Data Engineers and the other for the Band 7 Principal Data Engineers. The third group (Group 3) contains a pocket of vacancies that differ slightly from others. All are from a single organisation- a private company advertising through Central Advertising.
+
+::: panel-tabset
+<!-- make new tabs with ## -->
+
+## Comparison of Data Engineer vacancies across the NHS
+
+```{r}
+#| echo: false
+#| warning: false
+#| label: fig-skill-clustering-single-vacancy-DE
+#| fig-cap: " **Comparison of the identified technical skills for Data Engineer vacancies across NHS organisations.** Points located closer together share more similar skill sets than those positioned far apart. Filter the data and explore the metadata further in the table on the next tab."
+
+VACANCY='DATA ENGINEER'
+
+n_clust=4
+
+source(here::here('R/skills_analysis/single_job_title.R'))
+
+
+plot_data=create_plot_data(similarity_results_single_vac,single_vacancy_identified_skills,jitter=0.04)
+
+
+ct_data=crosstalk::SharedData$new(plot_data)
+
+
+
+title_filter=filter_select("qb", "Organisation", ct_data, ~Organisation)
+group_filter=filter_checkbox("type", "Group", ct_data, ~Group)
+jobtitle_filter=filter_select("qb", "Job Title", ct_data, ~`Job Title`)
+
+
+
+
+
+plot_code=create_interactive_figure(ct_data,y_axis_range = c(-0.7,0.7),x_axis_range = c(-0.7,0.7))
+
+
+# add a div so that the various components get bound together
+div(
+  # use bootstrap columns for the crosstalk stuff
+  bscols(
+    # bootstrap is built off a 12 wide grid system,
+    # so we have 1/6 and 5/6 width below
+    widths = c(3, NA),
+    list(
+      # Create shiny-esque filters
+      # Note that we are defining:
+      # a name for the filter
+      # a display name for the filter
+      # a shared data object
+      # and a column of interest (w/ a ~)
+     title_filter,
+     jobtitle_filter,
+     group_filter
+     
+    ),
+    plot_code
+  )
+)  
+
+```
+
+## Table of Results
+
+```{r}
+#| label: fig2-table-DE
+#| fig-cap: "**Table 2:** Similarity and grouping of Data Engineer vacancies across organisations based on the identified technical skills."
+
+
+
+create_tabulated_data(ct_data,'data_engineer')
+
+
+```
+:::
+
+**Data Analyst (including Lead, Principal, Specialist, Advanced, Senior, Assistant, Junior)**
+
+Data Analysts are the final Data Professional role covered by the NCF (ranging from Band 2 to Band 8c). We also include Information and Performance Analysts as described in the NCF. During 2021-23 a total of 1526 positions for which we had data were advertised for by 272 different organisations. The number of skills identified ranges from 1-17 with a median of 5 skills per vacancy. Each group includes a mixture of positions with varying pay grades and numbers of technical skills identified. Overall, vacancies in the first group have fewer identified technical skills.
+
+::: panel-tabset
+<!-- make new tabs with ## -->
+
+## Comparison of Data Analyst vacancies across the NHS
+
+```{r}
+ #| echo: false
+ #| warning: false
+ #| message: false
+ #| label: fig-skill-clustering-single-vacancy-DA
+ #| fig-cap: " **Comparison of the identified technical skills for  Data Analyst vacancies across NHS organisations.** Points located closer together share more similar skill sets than those positioned far apart. Filter the data and explore the metadata further in the table on the next tab."
+
+ VACANCY=c('DATA ANALYST','INFORMATION ANALYST','PERFORMANCE ANALYST')
+ n_clust=4
+ suppressMessages(source(here::here('R/skills_analysis/single_job_title.R')))
+
+
+ plot_data=create_plot_data(similarity_results_single_vac,single_vacancy_identified_skills,jitter=0.04)
+
+ plot_data%<>%
+   mutate(JOB=case_when(grepl('Data Analyst',`Job Title`)~'Data Analyst',
+                        grepl('Information Analyst',`Job Title`)~'Information Analyst',
+                        grepl('Performance Analyst',`Job Title`)~'Performance Analyst'))
+
+
+
+ ct_data=crosstalk::SharedData$new(plot_data)
+
+
+
+ title_filter=filter_select("qb", "Organisation", ct_data, ~Organisation)
+ group_filter=filter_checkbox("type", "Group", ct_data, ~Group)
+ jobtitle_filter=filter_select("qb", "Job Title", ct_data, ~`Job Title`)
+ job_type_filter=filter_select("qb", "Job Type", ct_data, ~`JOB`)
+
+
+
+
+
+ plot_code=create_interactive_figure(ct_data,y_axis_range = c(-0.9,0.9),x_axis_range = c(-0.9,0.9))
+
+
+ # add a div so that the various components get bound together
+ div(
+   # use bootstrap columns for the crosstalk stuff
+   bscols(
+     # bootstrap is built off a 12 wide grid system,
+     # so we have 1/6 and 5/6 width below
+     widths = c(3, NA),
+     list(
+       # Create shiny-esque filters
+       # Note that we are defining:
+       # a name for the filter
+       # a display name for the filter
+       # a shared data object
+       # and a column of interest (w/ a ~)
+      title_filter,
+      jobtitle_filter,
+      job_type_filter,
+       group_filter
+      
+
+     ),
+     plot_code
+   )
+ )
+
+```
+
+## Table of Results
+
+```{r}
+#| label: fig2-table-DA
+#| fig-cap: "**Table 3:** Similarity and grouping of Data Analyst vacancies across organisations based on the identified technical skills."
+ 
+ 
+ 
+create_tabulated_data(ct_data,'data_analyst')
+
+
+```
+:::
+
+You may be wondering what all of this means and why it matters. As a government department a degree of standardisation should exist across the NHS. This means a Data Professional should be able to easily move between NHS organisations, provided the pay grade is consistent. After all, we expect other positions within the NHS -such as doctors and nurses- to be consistent across organisations. So why not for Data Professional vacancies?
+
+Naturally we may expect to see some variation across organisations due to specialist requirements. However, the technical skills should broadly overlap for the same role across organisations provided the pay grade is consistent. We have shown some variability in the identified technical skills for the three Data Professional roles covered by the NCF. This is unsurprising as it is one of the reasons the NCF has been developed and rolled out. With more recent data becoming available, and with the adoption of the NCF across the NHS it would be interesting to see how the level of variability in the technical skills change from what is presented in this blog.
+
+## Conclusions and Caveats
+
+In this post we have introduced the NHS Jobs dataset and showcased its potential to provide valuable insights. We show how to extract and compare the technical skills for the Data Professional roles covered by the NCF. Our findings could benefit recruitment teams and managers, the NCF development team, and current/prospective employees. By identifying vacancies that do not align with others we can help to build a roadmap towards a standardised, and vibrant data professional workforce across the NHS. In future work we could also focus our analytical expertise and explore the relationship between job band and skill requirements.
+
+As mentioned before, eight organisations, including the NHSBSA, signed up to be early adopters of the NCF skills framework. A widespread roll out is currently taking place. Assessing the impact of the NCF early on is key. The [Data Driven Healthcare in 2030](https://www.hee.nhs.uk/our-work/building-our-future-digital-workforce/data-driven-healthcare-2030) report published by NHS Health Education England projects that to meet demand there will need to be a 69% increase in the DDAT workforce between 2020 and 2030. A future analysis could investigate the impact of the NCF in the context of standardising technical capabilities across the NHS workforce. This will help with the recruitment and retention of a growing workforce to meet the projections outlined in the Data Driven Healthcare in 2030 report.
+
+It is important to acknowledge the limitations of our work. Our technical skills identification relies on our in-house dictionary, which may miss certain skills. We plan to refine the dictionary and consider using resources like [ONET skills](https://www.onetcenter.org/dl_files/Hot_Technologies_Demand.pdf) or large language models like Chat GPT for skill extraction . Moving to more sophisticated skill extraction methods would not only be more robust but would allow us identify skills not currently defined within our dictionary.
+
+Another drawback of this analysis is that MDS produces dimensions that lack conventional interpretability. The dimensions do not correspond to easily understandable concepts like seniority or the number of technical skills.
+
+Finally, our current skills matching approach only identifies the presence of a skill in the text, without assessing competency or necessity. Expanding our skill search to include soft and managerial skills would provide a more complete understanding of Data Professional jobs. We hypothesise that as pay grade increases, the number of technical skills may decrease but the number and competency of managerial skills become more prevalent.
+
+## Final Remarks
+
+At the NHSBSA we process several hundred thousand job vacancies each year. Our Data Science Team has the opportunity to generate additional insight into this rich dataset. We hope the work presented in this article gives you a flavour of the types of analyses that could be conducted using the NHS jobs data. If it has inspired you to come up with your own interesting research questions please reach out to our Data Science team.
+
+If you would like to discuss the methods within this blog, please do not hesitate to get in touch with us at: **dall\@nhsbsa.nhs.uk**
