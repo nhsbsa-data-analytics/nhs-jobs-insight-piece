@@ -28,7 +28,8 @@ int644-jobs-insight-piece
 │   ├───INT644_BASE__TABLE_PROCESS_2122.sql # Initial script to create a base table within the database for the 21/22 financial year data.
 │   ├───INT644_BASE__TABLE_PROCESS_2223.sql # Initial script to create a base table within the database for the 22/23 financial year data.
 │   ├───int644_jd_data_dp.sql # Script to combine the data tables together and filter to get the data professional roles only.
-├───SQL ............................
+
+├───docs ............................
 |   |index.html # The final report in html format. Open in a browser to view all of the features.
 
 
