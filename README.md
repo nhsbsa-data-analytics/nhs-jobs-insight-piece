@@ -1,5 +1,7 @@
 # int644-jobs-data-insight-piece
 
+The insight piece blog can be found [here](https://nhsbsa-data-analytics.github.io/nhs-jobs-insight-piece/)
+
 ## Folder Structure
 
 The NHS Jobs insight piece focuses on extracting technical skills from job descriptions for data profressional roles. We focus on Data Scientists, Data Engineers and Data Analysts. We identify the skills and cluster them into groups of similar roles. This could benefit the development of the National Competency Framework and aid in the recruitment and retention of Digital, Data, and Technology staff.
@@ -9,7 +11,6 @@ int644-jobs-insight-piece
 ├───R ............................
 │   ├───markdown ................
 |   |   ├───int644_insight_piece.qmd # The quarto document that creates the final report.
-|   |   ├───int644_insight_piece.html # The final report in html format. Open in a browser to view all of the features.
 │   ├───skills_analysis ................
 |   |   ├───data_loading.R # R script to load in all of the data
 |   |   ├───functions.R # Script that contains all of the functions to analyse the data.
@@ -27,6 +28,8 @@ int644-jobs-insight-piece
 │   ├───INT644_BASE__TABLE_PROCESS_2122.sql # Initial script to create a base table within the database for the 21/22 financial year data.
 │   ├───INT644_BASE__TABLE_PROCESS_2223.sql # Initial script to create a base table within the database for the 22/23 financial year data.
 │   ├───int644_jd_data_dp.sql # Script to combine the data tables together and filter to get the data professional roles only.
+├───SQL ............................
+|   |index.html # The final report in html format. Open in a browser to view all of the features.
 
 
 ```
