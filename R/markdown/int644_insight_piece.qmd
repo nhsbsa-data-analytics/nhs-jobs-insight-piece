@@ -52,7 +52,7 @@ crossref:
 embed-resources: true
 ---
 
-```{r }
+```{r run-preamble }
 #| echo: false
 #| warning: false
 #| include: false
@@ -170,11 +170,9 @@ as.data.frame(matrix(c(tab$`Technical Skills`, rep(NA,100%%length(tab$`Technical
 
 ## Insights
 
-### Technical and analytical skills identified for the individual jobs covered by the NCF across NHS organisations.
+With all the data processed it is time to visualise the results. We will look at each of the three Data Professional roles (Data Scientist, Data Engineer, Data Analyst) individually to see if any differences exist across organisations.
 
-With all the data processed it is time to visualise the results. We will look at each Data Professional role individually to see if any differences exist across organisations.
-
-**Data Scientist (including Senior and Lead)**
+### Data Scientist (including Senior and Lead)
 
 Forty-two NHS organisations advertised for 89 Data Scientist vacancies during the 2021-23 period where we had data, ranging from Band 4 to Band 8b. Comparing Data Scientist vacancies and their identified technical skills we can see that differences exist (Figure 2). Although advertising for the same Data Professional role, there are some differences in the number of skills identified. For some organisations fewer technical skills are identified (Group 3), but for others many skills are identified. The median number of technical skills identified is 10, with a minimum and maximum of 1 and 18 respectively.
 
@@ -252,7 +250,7 @@ create_tabulated_data(ct_data,'data_scientist')
 ```
 :::
 
-**Data Engineer (including Lead, Senior and Principal)**
+### Data Engineer (including Lead, Senior and Principal)
 
 One hundred and thirty six Data Engineer vacancies were advertised by 28 NHS organisations during 2021-23 where we have data, ranging from Band 3 to Band 8c. The number of technical skills identified range from 4-17 with a median of 8 skills per vacancy. Based on the identified technical skills we can again see differences between the vacancies. Interestingly all vacancies clustered into Group 4 belong to a single organisation: North of England Commissioning Support. Two subgroups split the vacancies further based on the level of seniority. One subgroup corresponds to the Agenda for Change (AfC) Band 6 Data Engineers and the other for the Band 7 Principal Data Engineers. The third group (Group 3) contains a pocket of vacancies that differ slightly from others. All are from a single organisation- a private company advertising through Central Advertising.
 
@@ -331,7 +329,7 @@ create_tabulated_data(ct_data,'data_engineer')
 ```
 :::
 
-**Data Analyst (including Lead, Principal, Specialist, Advanced, Senior, Assistant, Junior)**
+### Data Analyst (including Lead, Principal, Specialist, Advanced, Senior, Assistant, Junior)
 
 Data Analysts are the final Data Professional role covered by the NCF (ranging from Band 2 to Band 8c). We also include Information and Performance Analysts as described in the NCF. During 2021-23 a total of 1526 positions for which we had data were advertised for by 272 different organisations. The number of skills identified ranges from 1-17 with a median of 5 skills per vacancy. Each group includes a mixture of positions with varying pay grades and numbers of technical skills identified. Overall, vacancies in the first group have fewer identified technical skills.
 
