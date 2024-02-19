@@ -44,7 +44,7 @@ skills_table = read.table(
 
 
 #load in a data table containing the list of technical skills and their grouping
-technical_skills_tbl = readxl::read_excel('./data/technical_skills.xlsx')
+technical_skills_tbl = readxl::read_excel(here::here('./data/technical_skills.xlsx'))
 
 # Section End: Data loading ----
 
