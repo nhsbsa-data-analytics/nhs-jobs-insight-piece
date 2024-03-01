@@ -436,4 +436,4 @@ Finally, our current skills matching approach only identifies the presence of a 
 
 At the NHSBSA we process several hundred thousand job vacancies each year. Our Data Science Team has the opportunity to generate additional insight into this rich dataset. We hope the work presented in this article gives you a flavour of the types of analyses that could be conducted using the NHS jobs data. If it has inspired you to come up with your own interesting research questions please reach out to our Data Science team.
 
-If you would like to discuss the methods within this blog, please do not hesitate to get in touch with us at: **dall\@nhsbsa.nhs.uk**
+We have released the code to produce this analysis on our Data and Analytics [GitHub](https://github.com/nhsbsa-data-analytics/nhs-jobs-insight-piece). If you would like to discuss the methods within this blog, please do not hesitate to get in touch with us at: **dall\@nhsbsa.nhs.uk**
